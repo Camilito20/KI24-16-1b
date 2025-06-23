@@ -10,7 +10,7 @@ import sys
 class ImageEditorWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Practis - Editor Avanzado")
+        self.setWindowTitle("Practis")
         self.setGeometry(100, 100, 800, 600)
 
         central_widget = QWidget()
@@ -18,11 +18,11 @@ class ImageEditorWindow(QMainWindow):
         layout = QVBoxLayout()
 
         # Botones para imagen
-        self.button = QPushButton("Abrir imagen")
+        self.button = QPushButton("Открыть изображение")
         self.button.clicked.connect(self.open_image)
         layout.addWidget(self.button)
 
-        self.boton = QPushButton("Cambiar imagen")
+        self.boton = QPushButton("Изменить изображение")
         self.boton.setVisible(False)
         self.boton.clicked.connect(self.open_image)
         layout.addWidget(self.boton)
@@ -40,13 +40,13 @@ class ImageEditorWindow(QMainWindow):
         self.line_y1 = QLineEdit(placeholderText="y1")
         self.line_x2 = QLineEdit(placeholderText="x2")
         self.line_y2 = QLineEdit(placeholderText="y2")
-        self.line_width = QLineEdit(placeholderText="Grosor")
+        self.line_width = QLineEdit(placeholderText="Толщина")
         
         for edit in [self.line_x1, self.line_y1, self.line_x2, self.line_y2, self.line_width]:
             edit.setMaximumWidth(70)
             line_layout.addWidget(edit)
         
-        self.draw_button = QPushButton("Dibujar Línea")
+        self.draw_button = QPushButton("Нарисовать линию")
         self.draw_button.clicked.connect(self.draw_line)
         line_layout.addWidget(self.draw_button)
         
@@ -56,9 +56,9 @@ class ImageEditorWindow(QMainWindow):
         brillo_layout = QHBoxLayout()
         self.Brillo_imput = QLineEdit()
         self.Brillo_imput.setValidator(QIntValidator(-100, 100))
-        self.Brillo_imput.setPlaceholderText("Ingrese valor de brillo (-100 a 100)")
+        self.Brillo_imput.setPlaceholderText("Введите значение яркости (-100 a 100)")
         self.Brillo_imput.setAlignment(Qt.AlignCenter)
-        self.boton_brillo = QPushButton("Aplicar brillo")
+        self.boton_brillo = QPushButton("Нанести блеск")
         self.boton_brillo.clicked.connect(self.apply_brightness)
         
         brillo_layout.addWidget(self.Brillo_imput)
@@ -69,14 +69,14 @@ class ImageEditorWindow(QMainWindow):
         cordenadas_Layout = QHBoxLayout()
         self.edit_x = QLineEdit(placeholderText="X")
         self.edit_y = QLineEdit(placeholderText="Y")
-        self.edit_ancho = QLineEdit(placeholderText="Ancho")
-        self.edit_Alto = QLineEdit(placeholderText="Alto")
+        self.edit_ancho = QLineEdit(placeholderText="Широкий")
+        self.edit_Alto = QLineEdit(placeholderText="Высокий")
 
         for edit in [self.edit_x, self.edit_y, self.edit_ancho, self.edit_Alto]:
             edit.setMaximumWidth(100)
             cordenadas_Layout.addWidget(edit)
 
-        self.Corte_imagen = QPushButton("Cortar la imagen")
+        self.Corte_imagen = QPushButton("Обрезать изображение")
         self.Corte_imagen.clicked.connect(self.cut_image)
         cordenadas_Layout.addWidget(self.Corte_imagen)
 
@@ -89,7 +89,7 @@ class ImageEditorWindow(QMainWindow):
 
     def open_image(self):
         file_name, _ = QFileDialog.getOpenFileName(
-            self, "Abrir imagen", "", "Image files (*.jpg *.png *.bmp)"
+            self, "Открыть изображение", "", "Image files (*.jpg *.png *.bmp)"
         )
         if file_name:
             self.button.setVisible(False)
@@ -124,7 +124,7 @@ class ImageEditorWindow(QMainWindow):
             
             # Validar valores
             if width <= 0:
-                raise ValueError("El grosor debe ser positivo")
+                raise ValueError("Толщина должна быть положительной.")
                 
             # Crear una copia de la imagen original para dibujar
             temp_pixmap = self.original_pixmap.copy()
@@ -142,7 +142,7 @@ class ImageEditorWindow(QMainWindow):
             self.display_image()
             
         except ValueError as e:
-            print(f"Error: {e}. Ingresa valores numéricos válidos.")
+            print(f"Error: {e}.Введите допустимые числовые значения.")
 
     def apply_brightness(self):
         if not self.original_image or not self.Brillo_imput.text():
@@ -196,14 +196,14 @@ class ImageEditorWindow(QMainWindow):
                 Ancho <= 0 or Alto <= 0 or
                 x + Ancho > self.current_pixmap.width() or
                 y + Alto > self.current_pixmap.height()):
-                raise ValueError("Coordenadas fuera de rango")
+                raise ValueError("Координаты вне диапазона")
 
             corte_hecho = self.current_pixmap.copy(x, y, Ancho, Alto)
             self.current_pixmap = corte_hecho
             self.display_image()
 
         except ValueError as e:
-            print(f"Error: {e}. Ingresa valores numéricos válidos.")
+            print(f"Error: {e}. Введите допустимые числовые значения.")
 
     def resizeEvent(self, event):
         self.display_image()
