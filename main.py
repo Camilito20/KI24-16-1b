@@ -2,8 +2,8 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QLineEdit, QFileDialog
 )
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtGui import QPixmap, QIntValidator, QColor, QImage
+from PyQt5.QtCore import Qt
 
 import sys
 
@@ -31,9 +31,23 @@ class ImageSelectorWindow(QMainWindow):
         #Mostrar imagen
         self.label_imagen = QLabel()
         self.label_imagen.setAlignment(Qt.AlignCenter)
-        self.label_imagen.setStyleSheet("border: 1px soild black")  # Tamaño fijo para el área de la imagen
+        self.label_imagen.setStyleSheet("border: 1px solid black")
         layout.addWidget(self.label_imagen)
 
+        #Controles de brillo
+        brillo_layout = QHBoxLayout()
+        self.Brillo_imput = QLineEdit()
+        self.Brillo_imput.setValidator(QIntValidator(-100, 100))
+        self.Brillo_imput.setPlaceholderText("Ingrese valor de brillo (-100 a 100)")
+        self.Brillo_imput.setAlignment(Qt.AlignCenter)
+        self.boton_brillo = QPushButton("Aplicar brillo")
+        self.boton_brillo.clicked.connect(self.apply_brightness)
+        
+        brillo_layout.addWidget(self.Brillo_imput)
+        brillo_layout.addWidget(self.boton_brillo)
+        layout.addLayout(brillo_layout)
+
+        #cordenadas de corte
         cordenadas_Layout = QHBoxLayout()
         self.edit_x = QLineEdit(placeholderText="X")
         self.edit_y = QLineEdit(placeholderText="Y")
@@ -52,6 +66,7 @@ class ImageSelectorWindow(QMainWindow):
         central_widget.setLayout(layout)
 
         self.original_pixmap = None
+        self.original_image = None  # Para guardar la QImage original
 
     def open_image(self):
         # Abrir diálogo para seleccionar archivo
@@ -63,19 +78,58 @@ class ImageSelectorWindow(QMainWindow):
         )
         if file_name:
             self.original_pixmap = QPixmap(file_name)
-            self.label_imagen.setPixmap(self.original_pixmap)
+            self.original_image = QImage(file_name)  # Guardamos la QImage para procesamiento
+            self.display_imagen(self.original_pixmap)
 
     def display_imagen(self, pixmap):
         scaled_pixmap = pixmap.scaled(
-            self.label_imagen.width() -10,
-            self.label_imagen.height() -10,
+            self.label_imagen.width() - 10,
+            self.label_imagen.height() - 10,
             Qt.KeepAspectRatio,
             Qt.SmoothTransformation
         )
         self.label_imagen.setPixmap(scaled_pixmap)
 
+    def apply_brightness(self):
+        if not self.original_image or not self.Brillo_imput.text():
+            return
+            
+        try:
+            value = int(self.Brillo_imput.text())
+        except ValueError:
+            return
+            
+        # Asegurarnos que el valor está en el rango permitido
+        value = max(-100, min(100, value))
+        
+        # Factor de brillo (0.0 a 2.0, donde 1.0 es normal)
+        factor = 1.0 + value / 100.0
+        
+        # Crear una copia de la imagen original para trabajar
+        modified_image = self.original_image.copy()
+        
+        # Aplicar ajuste de brillo a cada píxel
+        for y in range(modified_image.height()):
+            for x in range(modified_image.width()):
+                color = modified_image.pixelColor(x, y)
+                
+                # Ajustar cada componente de color
+                r = min(255, int(color.red() * factor))
+                g = min(255, int(color.green() * factor))
+                b = min(255, int(color.blue() * factor))
+                
+                # Mantener el mismo alpha
+                a = color.alpha()
+                
+                # Establecer el nuevo color
+                modified_image.setPixelColor(x, y, QColor(r, g, b, a))
+        
+        # Convertir QImage a QPixmap para mostrar
+        modified_pixmap = QPixmap.fromImage(modified_image)
+        self.display_imagen(modified_pixmap)
+
     def cut_image(self):
-        if not self.open_image:
+        if not self.original_pixmap:
             return
         
         try:
@@ -95,8 +149,6 @@ class ImageSelectorWindow(QMainWindow):
 
         except ValueError as e:
             print(f"Error: {e}. Ingresa valores numéricos válidos.")
-    
-        
 
 app = QApplication(sys.argv)
 window = ImageSelectorWindow()
